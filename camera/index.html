@@ -1,235 +1,192 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>摄像头拍照与录像应用（伪装版）</title>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <style>
-        #app-container { display: none; }
-        #disguise-page { display: block; }
-        .clickable-text { cursor: pointer; color: #0066cc; text-decoration: underline; }
-        video { width: 100%; max-width: 480px; border: 1px solid #ccc; }
-        canvas { display: none; }
-        .recording-indicator { width: 12px; height: 12px; background: red; border-radius: 50%; display: none; }
-        .record-time { display: none; }
-    </style>
+  <meta charset="UTF-8">
+  <title>摄像头测试 - Axuan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      text-align: center;
+      padding: 20px;
+    }
+    video {
+      width: 90%;
+      max-width: 400px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+    canvas {
+      display: none;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #0066cc;
+    }
+  </style>
 </head>
 <body>
-    <!-- 摄像头应用容器 -->
-    <div class="container" id="app-container">
-        <h1>摄像头拍照与录像应用</h1>
-        <div class="video-container" id="video-container">
-            <video id="video" autoplay playsinline></video>
-            <div class="recording-indicator" id="recording-indicator"></div>
-        </div>
-        <div class="record-time" id="record-time">录制中: 00:00</div>
-        <div class="controls">
-            <button id="open-button">打开摄像头</button>
-            <button id="close-button" disabled>关闭摄像头</button>
-            <button id="flip-button" disabled>翻转摄像头</button>
-            <button id="capture-button" disabled>拍照</button>
-            <button id="record-button" disabled>开始录像</button>
-            <button id="stop-record-button" disabled>停止录像</button>
-            <button id="toggle-area-btn">隐藏区域</button>
-            <button id="disguise-btn">取消伪装</button>
-        </div>
-        <p class="status" id="status">摄像头未启动</p>
-        <canvas id="canvas"></canvas>
-    </div>
+  <h2>📷 摄像头测试 - Axuan</h2>
+  
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  <div id="status">等待操作...</div>
 
-    <!-- 伪装页面 -->
-    <div class="disguise-page" id="disguise-page">
-        <div class="disguise-section" id="record-trigger-section">
-            <h3>黑科技资源网站</h3>
-            <p>访问链接：<a href="https://www.axuan.cloud/" target="_blank" rel="noopener" id="record-link">https://www.axuan.cloud/</a></p>
-            <p>提供内容：各种实用工具、资源免费下载！</p>
-        </div>
-        <div class="disguise-section" id="capture-trigger-section">
-            <h3>资源共享平台</h3>
-            <p>访问链接：<a href="https://www.axuan.cloud/js_ku/ziliaogongxiang/" target="_blank" rel="noopener" id="capture-link">https://www.axuan.cloud/js_ku/ziliaogongxiang/</a></p>
-            <p>提供内容：各种考公考研自考资料，免费下载！</p>
-        </div>
-        <div class="disguise-footer">
-            <p>© <span id="camera-trigger-text" class="clickable-text">www.axuan.cloud</span> - <span id="flip-camera-text" class="clickable-text">公众号axuan技术小站</span></p>
-            <a href="/read-2248-1.html" style="font-size: 12px; color: #666; margin-top: 10px; display: block;">不会使用？点击查看程序说明</a>
-            <p style="font-size: 12px; color: #666; margin-top: 10px;">申明：程序仅供娱乐，请勿滥用！否则后果自负！</p>
-        </div>
-    </div>
+  <div>
+    <button id="openBtn">打开摄像头</button>
+    <button id="closeBtn" disabled>关闭摄像头</button>
+    <button id="flipBtn" disabled>翻转摄像头</button>
+    <button id="captureBtn" disabled>拍照</button>
+    <button id="recordBtn" disabled>开始录像</button>
+    <button id="stopRecordBtn" disabled>停止录像</button>
+  </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const appContainer = document.getElementById('app-container');
-    const disguisePage = document.getElementById('disguise-page');
-    const disguiseBtn = document.getElementById('disguise-btn');
+  <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const status = document.getElementById('status');
-    const captureButton = document.getElementById('capture-button');
-    const recordButton = document.getElementById('record-button');
-    const stopRecordButton = document.getElementById('stop-record-button');
-    const openButton = document.getElementById('open-button');
-    const closeButton = document.getElementById('close-button');
-    const flipButton = document.getElementById('flip-button');
-    const recordTimeEl = document.getElementById('record-time');
-    const recordingIndicator = document.getElementById('recording-indicator');
-    const cameraTriggerText = document.getElementById('camera-trigger-text');
-    const flipCameraText = document.getElementById('flip-camera-text');
-    const recordTriggerSection = document.getElementById('record-trigger-section');
-    const recordLink = document.getElementById('record-link');
-    const captureTriggerSection = document.getElementById('capture-trigger-section');
-    const captureLink = document.getElementById('capture-link');
+    const openBtn = document.getElementById('openBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const flipBtn = document.getElementById('flipBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const stopRecordBtn = document.getElementById('stopRecordBtn');
 
     let stream = null;
+    let usingFrontCamera = false;
     let mediaRecorder = null;
     let recordedChunks = [];
-    let recordingTimer = null;
-    let recordingSeconds = 0;
-    let usingFrontCamera = false;
-    let isDisguised = true;
-    let isRecording = false;
 
-    const compressToZipAndDownload = async (fileBlob, fileType) => {
-        const zip = new JSZip();
-        const innerFileName = fileType === 'image' ? 'photo.png' : 'video.webm';
-        zip.file(innerFileName, fileBlob);
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const url = URL.createObjectURL(zipBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileType + ".zip";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    };
+    async function openCamera() {
+      if (stream) {
+        status.textContent = "摄像头已启动";
+        return;
+      }
 
-    // 打开摄像头
-    const openCamera = () => {
-        navigator.mediaDevices.getUserMedia({
-            video: { facingMode: usingFrontCamera ? 'user' : 'environment' },
-            audio: true
-        }).then(mediaStream => {
-            stream = mediaStream;
-            video.srcObject = stream;
-            openButton.disabled = true;
-            closeButton.disabled = false;
-            captureButton.disabled = false;
-            recordButton.disabled = false;
-            flipButton.disabled = false;
-            cameraTriggerText.style.color = '#ff0000';
-            status.textContent = "摄像头已启动";
-            setupMediaRecorder(mediaStream);
-        }).catch(err => {
-            console.error("摄像头打开失败:", err);
-            alert("摄像头打开失败: " + err.message);
-        });
-    };
+      const constraints = {
+        video: { facingMode: usingFrontCamera ? "user" : "environment" },
+        audio: false
+      };
 
-    const closeCamera = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            video.srcObject = null;
-            stream = null;
-        }
-        openButton.disabled = false;
-        closeButton.disabled = true;
-        captureButton.disabled = true;
-        recordButton.disabled = true;
-        stopRecordButton.disabled = true;
-        flipButton.disabled = true;
-        cameraTriggerText.style.color = '#0066cc';
-        flipCameraText.style.color = '#0066cc';
-        status.textContent = "摄像头已关闭";
-    };
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
 
-    const takePhoto = () => {
-        if (!stream) return alert("请先开启摄像头");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        if (usingFrontCamera) {
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-        }
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(blob => {
-            compressToZipAndDownload(blob, 'image');
-        }, 'image/png');
-    };
+        openBtn.disabled = true;
+        closeBtn.disabled = false;
+        flipBtn.disabled = false;
+        captureBtn.disabled = false;
+        recordBtn.disabled = false;
 
-    const setupMediaRecorder = (mediaStream) => {
-        mediaRecorder = new MediaRecorder(mediaStream);
-        mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) recordedChunks.push(e.data);
-        };
-        mediaRecorder.onstop = () => {
-            const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-            compressToZipAndDownload(videoBlob, 'video');
-            clearInterval(recordingTimer);
-            recordTimeEl.style.display = 'none';
-            recordingIndicator.style.display = 'none';
-            isRecording = false;
-        };
-    };
+        status.textContent = "摄像头已启动";
+      } catch (err) {
+        console.error("摄像头打开失败：", err);
+        status.textContent = "摄像头打开失败：" + err.message;
+        alert("摄像头调用失败，请检查是否允许浏览器使用摄像头！");
+      }
+    }
 
-    const toggleRecording = () => {
-        if (!mediaRecorder) return alert("摄像头未启动");
-        if (!isRecording) {
-            recordedChunks = [];
-            mediaRecorder.start();
-            recordingIndicator.style.display = 'block';
-            recordTimeEl.style.display = 'block';
-            isRecording = true;
-            recordingSeconds = 0;
-            recordingTimer = setInterval(() => {
-                recordingSeconds++;
-                const m = String(Math.floor(recordingSeconds/60)).padStart(2,'0');
-                const s = String(recordingSeconds%60).padStart(2,'0');
-                recordTimeEl.textContent = `录制中: ${m}:${s}`;
-            }, 1000);
-        } else {
-            mediaRecorder.stop();
-        }
-    };
+    function closeCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      video.srcObject = null;
 
-    const flipCamera = () => {
-        usingFrontCamera = !usingFrontCamera;
-        closeCamera();
-        openCamera();
-    };
+      openBtn.disabled = false;
+      closeBtn.disabled = true;
+      flipBtn.disabled = true;
+      captureBtn.disabled = true;
+      recordBtn.disabled = true;
+      stopRecordBtn.disabled = true;
 
-    // 按钮绑定
-    openButton.addEventListener('click', openCamera);
-    closeButton.addEventListener('click', closeCamera);
-    captureButton.addEventListener('click', takePhoto);
-    recordButton.addEventListener('click', toggleRecording);
-    stopRecordButton.addEventListener('click', toggleRecording);
-    flipButton.addEventListener('click', flipCamera);
+      status.textContent = "摄像头已关闭";
+    }
 
-    // 伪装交互
-    disguiseBtn.addEventListener('click', () => {
-        isDisguised = !isDisguised;
-        appContainer.style.display = isDisguised ? 'none' : 'block';
-        disguisePage.style.display = isDisguised ? 'block' : 'none';
-    });
-    disguisePage.addEventListener('dblclick', () => {
-        const pwd = prompt("请输入返回原应用的密码：");
-        if (pwd === 'peiqibaobao2021') {
-            isDisguised = false;
-            appContainer.style.display = 'block';
-            disguisePage.style.display = 'none';
-        } else if (pwd) {
-            alert("密码错误！");
-        }
-    });
+    function flipCamera() {
+      usingFrontCamera = !usingFrontCamera;
+      closeCamera();
+      openCamera();
+    }
 
-    // 伪装区事件
-    cameraTriggerText.addEventListener('click', () => stream ? closeCamera() : openCamera());
-    flipCameraText.addEventListener('click', flipCamera);
-    captureTriggerSection.addEventListener('click', (e) => { if (e.target.tagName!=='A') takePhoto(); });
-    recordTriggerSection.addEventListener('click', (e) => { if (e.target.tagName!=='A') toggleRecording(); });
-});
-</script>
+    function capturePhoto() {
+      if (!stream) {
+        alert("请先打开摄像头！");
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const imgData = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = imgData;
+      a.download = "capture.png";
+      a.click();
+
+      status.textContent = "照片已保存";
+    }
+
+    function startRecording() {
+      if (!stream) {
+        alert("请先打开摄像头！");
+        return;
+      }
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "recorded.webm";
+        a.click();
+
+        status.textContent = "录像已保存";
+      };
+
+      mediaRecorder.start();
+      recordBtn.disabled = true;
+      stopRecordBtn.disabled = false;
+      status.textContent = "正在录像...";
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      recordBtn.disabled = false;
+      stopRecordBtn.disabled = true;
+    }
+
+    // 按钮事件
+    openBtn.addEventListener("click", openCamera);
+    closeBtn.addEventListener("click", closeCamera);
+    flipBtn.addEventListener("click", flipCamera);
+    captureBtn.addEventListener("click", capturePhoto);
+    recordBtn.addEventListener("click", startRecording);
+    stopRecordBtn.addEventListener("click", stopRecording);
+  </script>
 </body>
 </html>
