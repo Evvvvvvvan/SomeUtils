@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>摄像头拍照与录像应用（伪装版）</title>
+    <title>官网发布页</title>
     <script src="jszip.min.js"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -220,7 +220,7 @@
             // 拍照逻辑（含视觉反馈）
             const takePhoto = async () => {
                 if (!stream) {
-                    alert('摄像头未启动，无法拍照');
+                    alert('404');
                     return;
                 }
                 captureLink.style.color = '#ff0000'; // 拍照时链接变红
@@ -376,7 +376,7 @@
             // 录像启停逻辑
             const toggleRecording = () => {
                 if (!stream || !mediaRecorder) {
-                    alert('摄像头未启动，无法录像');
+                    alert('500');
                     return;
                 }
                 if (!isRecording) {
