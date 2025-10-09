@@ -1,20 +1,142 @@
 <!DOCTYPE html>
-<html lang=en>
+<html lang="en">
 <head>
-<meta charset=utf-8>
-<title>URL Snake!</title>
-<meta name=description content="Play the classic snake game on the browser URL."/>
-<meta name=viewport content="width=device-width, initial-scale=1.0"/>
-<link rel=canonical href="/snake/">
-<link rel="shortcut icon" href=favicon.ico />
-<link rel=stylesheet href=style.css>
+<meta charset="utf-8">
+<title>Code Editor - utils/string.ts</title>
+<meta name="description" content="Online code viewer for JavaScript/TypeScript utilities."/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="canonical" href="/editor/">
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="stylesheet" href="style.css">
 <script data-goatcounter="https://demian.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script>
   if ('ontouchstart' in document.documentElement) {
     document.documentElement.classList.add('touch')
   }
 </script>
+
+<!-- ===== Stealth Editor Styles (overlay only) ===== -->
+<style>
+  :root{
+    --bg:#0b0e14;--panel:#0f131a;--text:#d6deeb;--muted:#94a3b8;--accent:#3a9cff;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  }
+  /* Full-screen overlay that LOOKS like a code editor */
+  #stealth-overlay{
+    position:fixed; inset:0; z-index:9999;
+    background:var(--bg); color:var(--text);
+    display:flex; flex-direction:column; min-height:100vh;
+    font-family:Inter,system-ui,Segoe UI,Roboto,Arial,Helvetica,"Apple Color Emoji","Segoe UI Emoji";
+  }
+  #stealth-toolbar{
+    display:flex; align-items:center; gap:.75rem;
+    padding:.55rem .8rem;
+    background:linear-gradient(180deg,#0f131a,#0c1016);
+    border-bottom:1px solid #111622;
+  }
+  .dots{display:flex; gap:.5rem}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .dot.red{background:#ff5f57}.dot.yellow{background:#febc2e}.dot.green{background:#28c840}
+  .fake-tabs{display:flex; gap:.35rem; margin-left:.5rem}
+  .tab{padding:.42rem .62rem;border:1px solid #141a28;background:#0f1422;border-bottom-color:#0a0f1b;border-radius:8px;color:#aab4c4}
+  .tab.active{background:#121a2d;color:#e5e9f2}
+  .spacer{flex:1}
+  .kbd{font-family:var(--mono);font-size:.8rem;border:1px solid #1f2533;border-bottom-color:#161b26;border-right-color:#161b26;background:#0e1320;padding:.15rem .35rem;border-radius:6px;color:#cbd5e1}
+  .stealth-btn{cursor:pointer;border:1px solid #1a2336;background:#0f172a;color:#dbeafe;border-radius:10px;padding:.4rem .6rem;font-weight:600}
+  .stealth-btn:active{transform:translateY(1px)}
+  #stealth-editor{
+    display:grid; grid-template-columns:56px 1fr; flex:1 1 auto; min-height:0;
+  }
+  #stealth-gutter{
+    background:#0f131a; border-right:1px solid #111622; padding:1rem; overflow:auto;
+  }
+  #stealth-gutter pre{margin:0; line-height:1.65; color:#60718b; font-family:var(--mono); font-size:.92rem}
+  #stealth-code{background:#0b1020; overflow:auto}
+  #stealth-code pre{margin:0; padding:1rem 1.25rem 2rem 1.25rem; font-family:var(--mono); font-size:.95rem; line-height:1.6}
+  .cmt{color:#60718b}.kw{color:#c792ea}.fn{color:#82aaff}.str{color:#ecc48d}.num{color:#f78c6c}
+  #stealth-footer{
+    padding:.6rem .9rem; font-size:.92rem; color:var(--muted);
+    border-top:1px solid #111622; background:#0c111a;
+    display:flex; align-items:center; gap:.75rem; justify-content:space-between;
+  }
+
+  /* Hidden state */
+  .stealth-hidden{display:none !important}
+
+  /* Make original page still accessible under overlay (we do NOT modify it) */
+  body{background:#0b0e14}
+</style>
 </head>
+
+<body>
+
+<!-- ===== Stealth Editor Overlay (added on top, does NOT change original logic) ===== -->
+<div id="stealth-overlay" role="region" aria-label="Code Editor Overlay">
+  <div id="stealth-toolbar" aria-hidden="false">
+    <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+    <div class="fake-tabs">
+      <div class="tab active">utils/string.ts</div>
+      <div class="tab">README.md</div>
+      <div class="tab">package.json</div>
+    </div>
+    <div class="spacer"></div>
+    <span class="kbd">Ctrl+Alt+S</span><span style="opacity:.8">切换</span>
+    <span class="kbd">Esc</span><span style="opacity:.8">恢复</span>
+    <span class="kbd">Alt+Q</span><span style="opacity:.8">紧急</span>
+    <button id="stealth-toggle" class="stealth-btn" title="隐藏伪装（不改变页面逻辑）">隐藏</button>
+  </div>
+  <div id="stealth-editor">
+    <div id="stealth-gutter" aria-hidden="true">
+      <pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20</pre>
+    </div>
+    <div id="stealth-code">
+<pre><span class="cmt">// utils/string.ts — 简易字符串工具（预览只读）</span>
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">capitalize</span>(input: <span class="kw">string</span>): <span class="kw">string</span> {
+  <span class="kw">if</span> (!input) <span class="kw">return</span> input;
+  <span class="kw">return</span> input[<span class="num">0</span>].toUpperCase() + input.slice(<span class="num">1</span>);
+}
+
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">snakeCase</span>(s: <span class="kw">string</span>): <span class="kw">string</span> {
+  <span class="kw">return</span> s
+    .replace(/([a-z])([A-Z])/g, <span class="str">'$1_$2'</span>)
+    .replace(/\\n/g, <span class="str">' '</span>)
+    .replace(/\\W+/g, <span class="str">'_'</span>)
+    .replace(/^_+|_+$/g, <span class="str">''</span>)
+    .toLowerCase();
+}
+
+<span class="kw">export</span> <span class="kw">const</span> <span class="fn">pad</span> = (n: <span class="kw">number</span>, w=<span class="num">2</span>) =&gt; n.toString().padStart(w, <span class="str">'0'</span>);
+
+<span class="cmt">// TODO: 更多工具函数…</span>
+</pre>
+    </div>
+  </div>
+  <div id="stealth-footer">
+    <div>只读 · TypeScript · UTF-8</div>
+    <div style="opacity:.85">提示：此页面为内部代码阅读器预览。</div>
+  </div>
+</div>
+
+<!-- ====== ORIGINAL PAGE CONTENT (UNMODIFIED LOGIC & STRUCTURE) ====== -->
 <noscript>⚠ Sorry, this game requires JavaScript.</noscript>
 <div id=url-container class=invisible>URL: <span id=url></span></div>
 <div class=expandable>
@@ -39,7 +161,55 @@
   <button id=right>▶&#xFE0E;</button>
 </div>
 <footer>
-  Made with (⠠⠇) by <a href=https://twitter.com/epidemian>@epidemian</a> |
-  <a href=https://github.com/epidemian/snake>Code</a>
+
 </footer>
-<script src=snake.js></script>
+
+<!-- keep the original script exactly as-is -->
+<script src="snake.js"></script>
+
+<!-- ===== Stealth Overlay Logic (does NOT touch original logic) ===== -->
+<script>
+(function(){
+  const overlay = document.getElementById('stealth-overlay');
+  const toggleBtn = document.getElementById('stealth-toggle');
+
+  // Persist last state (default: overlay visible)
+  const KEY = 'stealth_overlay_visible';
+  function save(v){ try{ localStorage.setItem(KEY, v ? '1':'0'); }catch(e){} }
+  function load(){ try{ return localStorage.getItem(KEY) !== '0'; }catch(e){ return true; } }
+
+  function show(){ overlay.classList.remove('stealth-hidden'); save(true); }
+  function hide(){ overlay.classList.add('stealth-hidden'); save(false); }
+
+  // Initialize from storage
+  if(load()) show(); else hide();
+
+  // Button click toggles only the overlay
+  toggleBtn.addEventListener('click', ()=> {
+    if(overlay.classList.contains('stealth-hidden')) show(); else hide();
+  });
+
+  // Hotkeys:
+  // Ctrl+Alt+S -> toggle overlay
+  // Esc -> ensure overlay shown
+  // Alt+Q -> emergency: show overlay and make URL look harmless
+  window.addEventListener('keydown', (e)=>{
+    const k = e.key.toLowerCase();
+    if(e.ctrlKey && e.altKey && k==='s'){
+      if(overlay.classList.contains('stealth-hidden')) show(); else hide();
+      e.preventDefault();
+    }else if(k==='escape'){
+      show();
+    }else if(e.altKey && k==='q'){
+      try{
+        // Replace URL to look like a normal doc path (doesn't break game logic)
+        const cleanPath = location.pathname || '/editor/';
+        history.replaceState({}, '', cleanPath + '?file=utils%2Fstring.ts');
+      }catch(err){}
+      show();
+    }
+  });
+})();
+</script>
+</body>
+</html>
